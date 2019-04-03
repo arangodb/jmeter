@@ -43,7 +43,7 @@ try {
 	.acquireHostList(true)
 	.build();
 
-	ArangoDatabase db = arango.db(&quot;acxiom&quot;);
+	ArangoDatabase db = arango.db(&quot;SetupSample&quot;);
 	boolean exists = db.exists();
 	if (!exists) {
 		exists = db.create();

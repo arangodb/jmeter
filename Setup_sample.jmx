@@ -12,7 +12,193 @@
       <stringProp name="TestPlan.user_define_classpath"></stringProp>
     </TestPlan>
     <hashTree>
-      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Setup: single threaded" enabled="true">
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setUp Thread Group" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">stoptestnow</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">1</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+        <stringProp name="ThreadGroup.duration"></stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </SetupThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="db connection" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script">import com.arangodb.ArangoDB
+import com.arangodb.ArangoDatabase
+import com.arangodb.ArangoDBException
+import com.arangodb.ArangoCollection
+import com.arangodb.ArangoGraph
+import com.arangodb.entity.BaseDocument
+import com.arangodb.entity.CollectionType
+import com.arangodb.entity.EdgeDefinition
+import com.arangodb.entity.LoadBalancingStrategy
+import com.arangodb.model.CollectionCreateOptions
+import com.arangodb.model.AqlFunctionCreateOptions
+import com.arangodb.model.AqlFunctionDeleteOptions
+import com.arangodb.model.AqlFunctionGetOptions
+import com.arangodb.model.AqlQueryExplainOptions
+import com.arangodb.model.AqlQueryOptions
+import com.arangodb.model.GraphCreateOptions
+import com.arangodb.util.MapBuilder
+import com.arangodb.ArangoCursor
+ 
+ 
+try {
+	ArangoDB arango = new ArangoDB.Builder()
+	  .host(&quot;192.168.42.71&quot;, 8529)
+       .loadBalancingStrategy(LoadBalancingStrategy.ROUND_ROBIN)
+       .acquireHostList(true)
+       .build();
+ 
+     ArangoDatabase db = arango.db(&quot;test-data&quot;);
+     boolean exists = db.exists();
+ 
+     if (!exists) {
+     	throw new Exception(&quot;database does not exist&quot;);
+     }
+	
+     props.put(&quot;ArangoDatabase&quot;, db);
+     props.put(&quot;ArangoDB&quot;, arango);
+     return &quot;db opened&quot;          
+}
+catch (ArangoDBException ae) {
+                SampleResult.setSuccessful(false);
+                SampleResult.setResponseCode(&quot;500&quot;);
+                SampleResult.setResponseMessage(&quot;ArangoDBException: &quot; + ae.getErrorMessage());
+}
+catch (Exception e) {
+                SampleResult.setSuccessful(false);
+                SampleResult.setResponseCode(&quot;500&quot;);
+                SampleResult.setResponseMessage(&quot;Exception: &quot; + e);
+}
+ </stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Queries: 60 threads" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <intProp name="LoopController.loops">-1</intProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">60</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.duration">120</stringProp>
+        <stringProp name="ThreadGroup.delay"></stringProp>
+      </ThreadGroup>
+      <hashTree>
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="CSV Data Set Config" enabled="true">
+          <stringProp name="delimiter">,</stringProp>
+          <stringProp name="fileEncoding">US-ASCII</stringProp>
+          <stringProp name="filename">/home/mmaszewski/acxiom/identifier_182091281101207.csv</stringProp>
+          <boolProp name="ignoreFirstLine">false</boolProp>
+          <boolProp name="quotedData">false</boolProp>
+          <boolProp name="recycle">false</boolProp>
+          <stringProp name="shareMode">shareMode.all</stringProp>
+          <boolProp name="stopThread">true</boolProp>
+          <stringProp name="variableNames"></stringProp>
+        </CSVDataSet>
+        <hashTree/>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Query" enabled="true">
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="script">import com.arangodb.ArangoDB
+import com.arangodb.ArangoDatabase
+import com.arangodb.ArangoDBException
+import com.arangodb.ArangoCollection
+import com.arangodb.entity.BaseDocument
+import com.arangodb.entity.CollectionType
+import com.arangodb.entity.LoadBalancingStrategy
+import com.arangodb.model.CollectionCreateOptions
+import com.arangodb.model.AqlFunctionCreateOptions
+import com.arangodb.model.AqlFunctionDeleteOptions
+import com.arangodb.model.AqlFunctionGetOptions
+import com.arangodb.model.AqlQueryExplainOptions
+import com.arangodb.model.AqlQueryOptions
+import com.arangodb.util.MapBuilder
+import com.arangodb.ArangoCursor
+ 
+ 
+try {
+
+	ArangoDatabase db = props.get(&quot;ArangoDatabase&quot;);
+	
+  final String v_query =&quot;For v1, e1, p1 in 1 ANY &apos;identifier/${bkey}&apos; GRAPH  &apos;idgraph&apos; For v2,e2, p2 in 1..10 ANY p1.vertices[1]._id GRAPH &apos;entitygraph&apos; For v3, e3, p3 in 1 ANY v2._id GRAPH  &apos;idgraph&apos; RETURN { identifiers: p3.vertices[*]._key}&quot;;
+  Map&lt;String, Object&gt; bindVars = new MapBuilder().get();
+  ArangoCursor&lt;String&gt; cursor = db.query(v_query, bindVars, null, String.class);
+  String out_str = &quot;output: [&quot;;
+  cursor.forEachRemaining(
+  	{aDocument -&gt; 
+    out_str +=  aDocument
+    }
+ );  
+    out_str += &quot;]&quot;;
+//    log.info(out_str);
+    return out_str;
+               
+}
+catch (ArangoDBException ae) {
+                SampleResult.setSuccessful(false);
+                SampleResult.setResponseCode(&quot;500&quot;);
+                SampleResult.setResponseMessage(&quot;ArangoDBException: &quot; + ae.getErrorMessage());
+}
+catch (Exception e) {
+                SampleResult.setSuccessful(false);
+                SampleResult.setResponseCode(&quot;500&quot;);
+                SampleResult.setResponseMessage(&quot;Exception: &quot; + e);
+}
+ </stringProp>
+          <stringProp name="scriptLanguage">groovy</stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+        <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>false</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <assertionsResultsToSave>0</assertionsResultsToSave>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+      </hashTree>
+      <PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown Thread Group" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
@@ -23,120 +209,53 @@
         <boolProp name="ThreadGroup.scheduler">false</boolProp>
         <stringProp name="ThreadGroup.duration"></stringProp>
         <stringProp name="ThreadGroup.delay"></stringProp>
-      </ThreadGroup>
+      </PostThreadGroup>
       <hashTree>
-        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Setup" enabled="true">
-          <stringProp name="cacheKey">true</stringProp>
-          <stringProp name="filename"></stringProp>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Clean up" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
           <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
           <stringProp name="script">import com.arangodb.ArangoDB
 import com.arangodb.ArangoDatabase
 import com.arangodb.ArangoDBException
 import com.arangodb.ArangoCollection
+import com.arangodb.entity.BaseDocument
 import com.arangodb.entity.CollectionType
 import com.arangodb.entity.LoadBalancingStrategy
 import com.arangodb.model.CollectionCreateOptions
-
+import com.arangodb.model.AqlFunctionCreateOptions
+import com.arangodb.model.AqlFunctionDeleteOptions
+import com.arangodb.model.AqlFunctionGetOptions
+import com.arangodb.model.AqlQueryExplainOptions
+import com.arangodb.model.AqlQueryOptions
+import com.arangodb.util.MapBuilder
+import com.arangodb.ArangoCursor
+ 
+ 
 try {
-	ArangoDB arango = new ArangoDB.Builder().host(&quot;127.0.0.1&quot;, 8529)
-	.loadBalancingStrategy(LoadBalancingStrategy.ONE_RANDOM)
-	.acquireHostList(true)
-	.build();
 
-	ArangoDatabase db = arango.db(&quot;SetupSample&quot;);
-	boolean exists = db.exists();
-	if (!exists) {
-		exists = db.create();
-	}
+	ArangoDatabase db = props.get(&quot;ArangoDatabase&quot;);
+     props.put(&quot;ArangoDatabase&quot;, &quot;&quot;);
+	ArangoDB arango = props.get(&quot;ArangoDB&quot;);
+     props.put(&quot;ArangoDB&quot;, &quot;&quot;);
+     arango.shutdown();
 
-	if (!exists) {
-		throw new Exception(&quot;database does not exist&quot;);
-	}
-
-	ArangoCollection col_document = db.collection(&quot;documents&quot;);
-	if (!col_document.exists()) {
-		CollectionCreateOptions cd_options = new CollectionCreateOptions();
-		cd_options.name(&quot;documents&quot;).type(CollectionType.DOCUMENT);
-		col_document.create(cd_options);
-	}
-
-	ArangoCollection col_entity = db.collection(&quot;entity_id&quot;);
-	if (!col_entity.exists()) {
-		CollectionCreateOptions ce_options = new CollectionCreateOptions();
-		ce_options.name(&quot;entity_id&quot;).type(CollectionType.EDGES);
-		col_entity.create(ce_options);
-	}
-
-	ArangoCollection col_id = db.collection(&quot;id_entity&quot;);
-	if (!col_id.exists()) {
-		CollectionCreateOptions ci_options = new CollectionCreateOptions();
-		ci_options.name(&quot;id_entity&quot;).type(CollectionType.EDGES);
-		col_id.create(ci_options);
-	}
-
-	ArangoCollection col_assoc = db.collection(&quot;associate&quot;);
-	if (!col_assoc.exists()) {
-		CollectionCreateOptions ca_options = new CollectionCreateOptions();
-		ca_options.name(&quot;associate&quot;).type(CollectionType.EDGES);
-		col_assoc.create(ca_options);
-	}
-
-	
-	
-	return &quot;setup successful&quot;
 }
 catch (ArangoDBException ae) {
-	SampleResult.setSuccessful(false);
-	SampleResult.setResponseCode(&quot;500&quot;);
-	SampleResult.setResponseMessage(&quot;ArangoDBException: &quot; + ae.getErrorMessage());
+                SampleResult.setSuccessful(false);
+                SampleResult.setResponseCode(&quot;500&quot;);
+                SampleResult.setResponseMessage(&quot;ArangoDBException: &quot; + ae.getErrorMessage());
 }
 catch (Exception e) {
-	SampleResult.setSuccessful(false);
-	SampleResult.setResponseCode(&quot;500&quot;);
-	SampleResult.setResponseMessage(&quot;Exception: &quot; + e);
+                SampleResult.setSuccessful(false);
+                SampleResult.setResponseCode(&quot;500&quot;);
+                SampleResult.setResponseMessage(&quot;Exception: &quot; + e);
 }
 </stringProp>
-          <stringProp name="scriptLanguage">groovy</stringProp>
         </JSR223Sampler>
         <hashTree/>
       </hashTree>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View setup results" enabled="true">
-        <boolProp name="ResultCollector.error_logging">false</boolProp>
-        <objProp>
-          <name>saveConfig</name>
-          <value class="SampleSaveConfiguration">
-            <time>true</time>
-            <latency>true</latency>
-            <timestamp>true</timestamp>
-            <success>true</success>
-            <label>true</label>
-            <code>true</code>
-            <message>true</message>
-            <threadName>true</threadName>
-            <dataType>true</dataType>
-            <encoding>false</encoding>
-            <assertions>true</assertions>
-            <subresults>true</subresults>
-            <responseData>false</responseData>
-            <samplerData>false</samplerData>
-            <xml>false</xml>
-            <fieldNames>true</fieldNames>
-            <responseHeaders>false</responseHeaders>
-            <requestHeaders>false</requestHeaders>
-            <responseDataOnError>false</responseDataOnError>
-            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
-            <assertionsResultsToSave>0</assertionsResultsToSave>
-            <bytes>true</bytes>
-            <sentBytes>true</sentBytes>
-            <url>true</url>
-            <threadCounts>true</threadCounts>
-            <idleTime>true</idleTime>
-            <connectTime>true</connectTime>
-          </value>
-        </objProp>
-        <stringProp name="filename"></stringProp>
-      </ResultCollector>
-      <hashTree/>
     </hashTree>
   </hashTree>
 </jmeterTestPlan>
